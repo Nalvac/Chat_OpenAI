@@ -11,7 +11,7 @@ export class ChatService {
         let data;
         try {
             data = await this.openai.chat.completions.create({
-                messages: [{role: 'user', content: `Traduit moi ce text '${text}' en ${language}`}],
+                messages: [{role: 'user', content: `Traduit ce text: '${text}' en '${language}' sans commentaire`}],
                 model: 'gpt-3.5-turbo',
             });
 

@@ -38,15 +38,18 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
   sendMessagesToClient(client: Socket) {
     client.emit('message', this.messages);
   }
-
   @SubscribeMessage('translate')
-  handleTranslateMessage(client: Socket, messageId: number, language: string){
+  handleTranslateMessage(client: Socket, data): void {
+    const [messageId, language] = data;
     this.chatSrv.makeTranslate(this.messages[messageId].content, language).then(
         (response) => {
-          this.messages[messageId].content = response;
-          this.server.emit('message', this.messages)
+          const translateMessage = [response, messageId];
+          console.log(translateMessage);
+          client.emit('messageTranslated', translateMessage);
         }
-    )
+    );
   }
+
+
 
 }

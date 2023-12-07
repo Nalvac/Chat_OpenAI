@@ -6,6 +6,7 @@ import {useRouter} from "next/navigation";
 import {toast} from "react-toastify";
 import {MessageInterface} from "interface/messageInterface";
 import io from "socket.io-client";
+import MessagesDisplay from "@/component/messagesDisplay";
 
 export default function Home() {
     const socket = io('http://localhost:4000');
@@ -37,6 +38,7 @@ export default function Home() {
         })
 
         socket.on('message', (messages: Array<MessageInterface>) => {
+            console.log(messages);
             setMessages(messages);
         });
 
@@ -46,8 +48,6 @@ export default function Home() {
         };
     }, [userContextName, router]);
 
-
-
     const handleSendMessage = () => {
         if (inputMessage !== '' && clientId) {
             socket.emit('message', { content: inputMessage, role: 'user', language: selectedLanguage,sendAt: (new Date()).toLocaleDateString(), userName: userContextName} as MessageInterface);
@@ -55,25 +55,33 @@ export default function Home() {
         setInputMessage("");
     };
 
+    const handleTranslateMessage = (messageId: number, language: string) => {
+        socket.emit('translate', messageId, language);
+
+        console.log(language);
+        // Écoutez l'événement une seule fois
+        socket.once('messageTranslated', (data: any) => {
+            // Faites une copie de l'état actuel des messages
+            const currentMessages = [...messages];
+            console.log(data);
+            // Mettez à jour le message traduit spécifique
+            const [response, translatedMessageId] = data;
+            currentMessages[translatedMessageId].content = response;
+
+            // Mettez à jour l'état des messages avec la fusion des anciens et des nouveaux messages
+            setMessages(currentMessages);
+        });
+    };
+
+
     const handleSelectedLanguage = (event: any) => {
         setSelectedLanguage(event.target.value)
     }
 
+
     return (
         <div className="flex flex-col h-screen bg-gray-100 dark:bg-gray-800">
-            <div className="flex-1 p-4 overflow-y-auto bg-white">
-                {messages.map((message, index) => (
-                    <div key={index}>
-                        <small className={`text-gray-600 flex  ${message.userName !== userContextName ? 'justify-start' : 'justify-end'}`}>{message.userName}</small>
-                        <div className={`flex items-center ${message.userName !== userContextName ? 'justify-start' : 'justify-end'}`}>
-                            <div className={`flex-col items-center mb-2 ${message.userName !== userContextName ? 'bg-green-600' : 'bg-blue-400'}  p-2 rounded-lg`}>
-                                <p className={`text-sm font-medium text-white ${message.userName !== userContextName ? 'ml-2' : 'mr-2 '}`}>{message.content}</p>
-                                <span className={`text-sm text-gray-300 mb-2 `}>{message.sendAt}</span>
-                            </div>
-                        </div>
-                    </div>
-                ))}
-            </div>
+            <MessagesDisplay messages={messages} userContextName={userContextName} handleTranslateMessage={handleTranslateMessage}></MessagesDisplay>
             <div className="flex items-center p-4 border-t border-gray-200 dark:border-gray-700">
                 <input
                     type="text"
@@ -82,14 +90,6 @@ export default function Home() {
                     onChange={(e) => setInputMessage(e.target.value)}
                     className="flex-1 px-4 py-2 mr-4 text-sm text-gray-700 bg-white border border-gray-300 rounded-lg focus:outline-none dark:bg-gray-700 dark:text-gray-300 dark:border-gray-600"
                 />
-                <select
-                    value={selectedLanguage}
-                    onChange={handleSelectedLanguage}
-                    className="px-4 py-2 text-sm text-gray-700 bg-white border border-gray-300 rounded-lg focus:outline-none dark:bg-gray-700 dark:text-gray-300 dark:border-gray-600 mr-5">
-                    <option value="en">English</option>
-                    <option value="fr">French</option>
-                    <option value="es">Spanish</option>
-                </select>
                 <button
                     type="button"
                     onClick={handleSendMessage}
