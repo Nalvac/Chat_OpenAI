@@ -1,16 +1,14 @@
 "use client";
-import io from 'socket.io-client';
+
 import React, { useEffect, useState } from "react";
 import {useUser} from "@/context/userContext";
 import {useRouter} from "next/navigation";
 import {toast} from "react-toastify";
 import {MessageInterface} from "interface/messageInterface";
-
-
-const socket = io('http://localhost:4000');
-
+import io from "socket.io-client";
 
 export default function Home() {
+    const socket = io('http://localhost:4000');
     const [messages, setMessages] = useState<MessageInterface[]>([]);
     const [inputMessage, setInputMessage] = useState("");
     const [selectedLanguage, setSelectedLanguage] = useState('en');
@@ -18,28 +16,37 @@ export default function Home() {
     const { userContextName } = useUser();
     const router = useRouter();
 
+
     useEffect(() => {
-
-        if (userContextName === '' && !clientId) {
+        // Vérifie si le nom d'utilisateur existe
+        if (!userContextName) {
+            toast.error("Le nom d'utilisateur est vide. Vous allez être redirigé vers la page d'accueil...", {
+                position: "top-right",
+                autoClose: 3000
+            });
             router.push('/');
-            toast.success(`Bienvenue ${userContextName} ! Prêt pour une nouvelle discussion ?`);
-
-        } else {
-
-            socket.on('connect', () => {
-                console.log('Connecté au serveur WebSocket');
-            });
-            socket.on('clientId', (clientId: string) => {
-                console.log(clientId);
-                setClientId(clientId);
-            })
-
-            socket.on('message', (messages: Array<MessageInterface>) => {
-                setMessages(messages);
-            });
+            return;
         }
 
-    }, []);
+        socket.on('connect', () => {
+            console.log('Connecté au serveur WebSocket');
+        });
+        socket.on('clientId', (clientId: string) => {
+            console.log(clientId);
+            setClientId(clientId);
+        })
+
+        socket.on('message', (messages: Array<MessageInterface>) => {
+            setMessages(messages);
+        });
+
+        // Nettoie en se déconnectant du socket lors du démontage du composant
+        return () => {
+            socket.disconnect();
+        };
+    }, [userContextName, router]);
+
+
 
     const handleSendMessage = () => {
         if (inputMessage !== '' && clientId) {

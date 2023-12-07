@@ -6,17 +6,18 @@ import {
   WebSocketServer,
 } from '@nestjs/websockets';
 import { Socket, Server } from 'socket.io';
-import {ChatService} from "./chat.service";
-import {MessageInterface} from "interface/messageInterface";
+import { ChatService } from "./chat.service";
+import { MessageInterface } from "interface/messageInterface";
+
 @WebSocketGateway({
   cors: true,
 })
-export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect{
+export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
   @WebSocketServer() server: Server;
 
   messages: Array<MessageInterface> = [];
-  constructor(private chatSrv: ChatService) {
-  }
+
+  constructor(private chatSrv: ChatService) {}
 
   handleDisconnect(client: Socket) {
     console.log(`Client disconnected 🎉: ${client.id}`);
@@ -24,20 +25,28 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect{
 
   handleConnection(client: Socket) {
     console.log(`Client connected 💪: ${client.id}`);
-    client.emit('clientId', client.id)
-    this.server.emit('message', this.messages);
+    client.emit('clientId', client.id);
+    this.sendMessagesToClient(client);
   }
+
   @SubscribeMessage('message')
   handleMessage(client: Socket, message: MessageInterface): void {
-    this.chatSrv.makeTranslate(message.content, message.language).then(
-        (response) => {
-          const botResponse: MessageInterface = {content: response.toString(), role: 'bot', language: message.language, sendAt: message.sendAt, userName: 'ChatGpt'}
-          this.messages = [...this.messages, message, botResponse];
-          this.server.emit('message', this.messages);
-        },
-        (error) =>  {
-          console.log(error);
-        }
-    );
+      this.messages = [...this.messages, message];
+      this.server.emit('message', this.messages);
   }
+
+  sendMessagesToClient(client: Socket) {
+    client.emit('message', this.messages);
+  }
+
+  @SubscribeMessage('translate')
+  handleTranslateMessage(client: Socket, messageId: number, language: string){
+    this.chatSrv.makeTranslate(this.messages[messageId].content, language).then(
+        (response) => {
+          this.messages[messageId].content = response;
+          this.server.emit('message', this.messages)
+        }
+    )
+  }
+
 }
