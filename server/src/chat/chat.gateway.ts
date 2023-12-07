@@ -44,7 +44,6 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
     this.chatSrv.makeTranslate(this.messages[messageId].content, language).then(
         (response) => {
           const translateMessage = [response, messageId];
-          console.log(translateMessage);
           client.emit('messageTranslated', translateMessage);
         }
     );

@@ -12,14 +12,12 @@ export default function Home() {
     const socket = io('http://localhost:4000');
     const [messages, setMessages] = useState<MessageInterface[]>([]);
     const [inputMessage, setInputMessage] = useState("");
-    const [selectedLanguage, setSelectedLanguage] = useState('en');
     const [clientId, setClientId] = useState<string>('');
     const { userContextName } = useUser();
     const router = useRouter();
 
 
     useEffect(() => {
-        // Vérifie si le nom d'utilisateur existe
         if (!userContextName) {
             toast.error("Le nom d'utilisateur est vide. Vous allez être redirigé vers la page d'accueil...", {
                 position: "top-right",
@@ -42,7 +40,6 @@ export default function Home() {
             setMessages(messages);
         });
 
-        // Nettoie en se déconnectant du socket lors du démontage du composant
         return () => {
             socket.disconnect();
         };
@@ -50,7 +47,7 @@ export default function Home() {
 
     const handleSendMessage = () => {
         if (inputMessage !== '' && clientId) {
-            socket.emit('message', { content: inputMessage, role: 'user', language: selectedLanguage,sendAt: (new Date()).toLocaleDateString(), userName: userContextName} as MessageInterface);
+            socket.emit('message', { content: inputMessage, role: 'user', sendAt: (new Date()).toLocaleDateString(), userName: userContextName} as MessageInterface);
         }
         setInputMessage("");
     };
@@ -58,26 +55,14 @@ export default function Home() {
     const handleTranslateMessage = (messageId: number, language: string) => {
         socket.emit('translate', messageId, language);
 
-        console.log(language);
-        // Écoutez l'événement une seule fois
         socket.once('messageTranslated', (data: any) => {
-            // Faites une copie de l'état actuel des messages
             const currentMessages = [...messages];
-            console.log(data);
-            // Mettez à jour le message traduit spécifique
             const [response, translatedMessageId] = data;
             currentMessages[translatedMessageId].content = response;
 
-            // Mettez à jour l'état des messages avec la fusion des anciens et des nouveaux messages
             setMessages(currentMessages);
         });
     };
-
-
-    const handleSelectedLanguage = (event: any) => {
-        setSelectedLanguage(event.target.value)
-    }
-
 
     return (
         <div className="flex flex-col h-screen bg-gray-100 dark:bg-gray-800">
