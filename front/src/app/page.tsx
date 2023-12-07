@@ -9,7 +9,7 @@ export default function Home() {
           <a href="/chat"
              className="inline-block mt-8 px-6 py-3 text-lg font-medium text-white bg-blue-700 rounded-lg hover:bg-blue-800 focus:ring-4 focus:ring-blue-300 dark:focus:ring-blue-900"> Traduction de text</a>
           <a href="/chat"
-             className="inline-block ml-5 mt-8 px-6 py-3 text-lg font-medium text-white bg-blue-700 rounded-lg hover:bg-blue-800 focus:ring-4 focus:ring-blue-300 dark:focus:ring-blue-900"> Validation De L'Information</a>
+             className="inline-block ml-5 mt-8 px-6 py-3 text-lg font-medium text-white bg-blue-700 rounded-lg hover:bg-blue-800 focus:ring-4 focus:ring-blue-300 dark:focus:ring-blue-900"> Validation De L&apos;Information</a>
           <a href="/chat"
              className="inline-block ml-5 mt-8 px-6 py-3 text-lg font-medium text-white bg-blue-700 rounded-lg hover:bg-blue-800 focus:ring-4 focus:ring-blue-300 dark:focus:ring-blue-900">Suggestions De Réponse</a>
         </div>

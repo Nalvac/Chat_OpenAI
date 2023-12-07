@@ -24,6 +24,7 @@ export default function Home() {
             console.log('Connecté au serveur WebSocket');
         });
         socket.on('clientId', (clientId: string) => {
+            console.log(clientId);
             setClientId(clientId);
         })
 

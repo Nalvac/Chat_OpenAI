@@ -4,20 +4,24 @@ interface Message {
     content: string;
     role: 'user' | 'bot';
     language: string;
+    sendAt: string;
+    clientId: string;
 }
 
 interface Props {
     messages: Array<Message>;
+    clientId: string;
 }
-const MessagesDisplay = ({messages}: Props) =>  {
+const MessagesDisplay = ({messages, clientId}: Props) =>  {
     return (
-        <div className="flex-1 p-4 overflow-y-auto">
-            {/* Afficher les messages */}
+        <div className="flex-1 p-4 overflow-y-auto bg-white">
             {messages.map((message, index) => (
-                <div key={index} className={`flex items-center ${message.role !== 'user' ? 'justify-start' : 'justify-end'} mb-2`}>
-                    <div className={`flex items-center ${message.role !== 'user' ? '' : 'flex-row-reverse'} mb-2 `}>
-                        <img src="https://placehold.co/40x40/eeeeee/4B5563/png?text=image" alt="User" className="w-8 h-8 rounded-full" />
-                        <p className={`text-sm font-medium text-gray-700 dark:text-gray-300 ${message.role !== 'user' ? 'ml-2' : 'mr-2'}`}>{message.content}</p>
+                <div key={index}>
+                    <div className={`flex items-center ${message.clientId !== clientId ? 'justify-start' : 'justify-end'}`}>
+                        <div className={`flex-col items-center mb-2 bg-blue-400 p-2 rounded-lg`}>
+                            <p className={`text-sm font-medium text-white ${message.role !== 'user' ? 'ml-2' : 'mr-2 '}`}>{message.content}</p>
+                            <span className={`text-sm text-gray-300 mb-2 `}>{message.sendAt}</span>
+                        </div>
                     </div>
                 </div>
             ))}
