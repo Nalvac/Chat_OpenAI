@@ -1,41 +1,49 @@
 "use client";
 import io from 'socket.io-client';
 import React, { useEffect, useState } from "react";
+import {useUser} from "@/context/userContext";
+import {useRouter} from "next/navigation";
+import {toast} from "react-toastify";
+import {MessageInterface} from "interface/messageInterface";
+
 
 const socket = io('http://localhost:4000');
 
-// Interface pour représenter la structure d'un message
-interface Message {
-    content: string;
-    role: 'user' | 'bot';
-    language: string;
-    sendAt: string;
-    clientId: string;
-}
 
 export default function Home() {
-    const [messages, setMessages] = useState<Message[]>([]);
+    const [messages, setMessages] = useState<MessageInterface[]>([]);
     const [inputMessage, setInputMessage] = useState("");
     const [selectedLanguage, setSelectedLanguage] = useState('en');
     const [clientId, setClientId] = useState<string>('');
+    const { userContextName } = useUser();
+    const router = useRouter();
 
     useEffect(() => {
-        socket.on('connect', () => {
-            console.log('Connecté au serveur WebSocket');
-        });
-        socket.on('clientId', (clientId: string) => {
-            console.log(clientId);
-            setClientId(clientId);
-        })
 
-        socket.on('message', (messages: Array<Message>) => {
-            setMessages(messages);
-        });
+        if (userContextName === '' && !clientId) {
+            router.push('/');
+            toast.success(`Bienvenue ${userContextName} ! Prêt pour une nouvelle discussion ?`);
+
+        } else {
+
+            socket.on('connect', () => {
+                console.log('Connecté au serveur WebSocket');
+            });
+            socket.on('clientId', (clientId: string) => {
+                console.log(clientId);
+                setClientId(clientId);
+            })
+
+            socket.on('message', (messages: Array<MessageInterface>) => {
+                setMessages(messages);
+            });
+        }
+
     }, []);
 
     const handleSendMessage = () => {
         if (inputMessage !== '' && clientId) {
-            socket.emit('message', { content: inputMessage, role: 'user', language: selectedLanguage,sendAt: (new Date()).toLocaleDateString(), clientId: clientId});
+            socket.emit('message', { content: inputMessage, role: 'user', language: selectedLanguage,sendAt: (new Date()).toLocaleDateString(), userName: userContextName} as MessageInterface);
         }
         setInputMessage("");
     };
@@ -49,9 +57,10 @@ export default function Home() {
             <div className="flex-1 p-4 overflow-y-auto bg-white">
                 {messages.map((message, index) => (
                     <div key={index}>
-                        <div className={`flex items-center ${message.clientId !== clientId ? 'justify-start' : 'justify-end'}`}>
-                            <div className={`flex-col items-center mb-2 bg-blue-400 p-2 rounded-lg`}>
-                                <p className={`text-sm font-medium text-white ${message.role !== 'user' ? 'ml-2' : 'mr-2 '}`}>{message.content}</p>
+                        <small className={`text-gray-600 flex  ${message.userName !== userContextName ? 'justify-start' : 'justify-end'}`}>{message.userName}</small>
+                        <div className={`flex items-center ${message.userName !== userContextName ? 'justify-start' : 'justify-end'}`}>
+                            <div className={`flex-col items-center mb-2 ${message.userName !== userContextName ? 'bg-green-600' : 'bg-blue-400'}  p-2 rounded-lg`}>
+                                <p className={`text-sm font-medium text-white ${message.userName !== userContextName ? 'ml-2' : 'mr-2 '}`}>{message.content}</p>
                                 <span className={`text-sm text-gray-300 mb-2 `}>{message.sendAt}</span>
                             </div>
                         </div>

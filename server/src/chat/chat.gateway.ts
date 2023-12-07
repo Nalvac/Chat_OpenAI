@@ -7,28 +7,19 @@ import {
 } from '@nestjs/websockets';
 import { Socket, Server } from 'socket.io';
 import {ChatService} from "./chat.service";
-
-interface Message {
-  content: string;
-  role: 'user' | 'bot';
-  language: string;
-  sendAt: string;
-  clientId?: string;
-}
+import {MessageInterface} from "interface/messageInterface";
 @WebSocketGateway({
   cors: true,
 })
 export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect{
   @WebSocketServer() server: Server;
 
-  messages: Array<Message> = [];
+  messages: Array<MessageInterface> = [];
   constructor(private chatSrv: ChatService) {
   }
 
   handleDisconnect(client: Socket) {
     console.log(`Client disconnected 🎉: ${client.id}`);
-    this.messages = [];
-    this.server.emit('message', this.messages);
   }
 
   handleConnection(client: Socket) {
@@ -37,10 +28,10 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect{
     this.server.emit('message', this.messages);
   }
   @SubscribeMessage('message')
-  handleMessage(client: Socket, message: Message): void {
+  handleMessage(client: Socket, message: MessageInterface): void {
     this.chatSrv.makeTranslate(message.content, message.language).then(
         (response) => {
-          const botResponse: Message = {content: response.toString(), role: 'bot', language: message.language, sendAt: (new Date()).toLocaleDateString()}
+          const botResponse: MessageInterface = {content: response.toString(), role: 'bot', language: message.language, sendAt: message.sendAt, userName: 'ChatGpt'}
           this.messages = [...this.messages, message, botResponse];
           this.server.emit('message', this.messages);
         },

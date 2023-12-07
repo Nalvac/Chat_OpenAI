@@ -3027,6 +3027,10 @@ inquirer@8.2.6:
     through "^2.3.6"
     wrap-ansi "^6.0.1"
 
+"Interface@file:../interface":
+  version "1.0.0"
+  resolved "file:../interface"
+
 interpret@^1.0.0:
   version "1.4.0"
   resolved "https://registry.npmjs.org/interpret/-/interpret-1.4.0.tgz"

@@ -1,0 +1,7 @@
+{
+  "name": "Interface",
+  "version": "1.0.0",
+  "description": "Message Interface",
+  "main": "MesssageInterface",
+  "license": "MIT"
+}
