@@ -6,9 +6,8 @@ import {useRouter} from "next/navigation";
 import {toast} from "react-toastify";
 import {MessageInterface} from "interface/messageInterface";
 import io from "socket.io-client";
-import MessagesDisplay from "@/component/messagesDisplay";
 
-export default function Home() {
+export default function Chat() {
     const socket = io('http://localhost:4000');
     const [messages, setMessages] = useState<MessageInterface[]>([]);
     const [botSuggestion, setBotSuggestion] = useState<MessageInterface[]>([]);
@@ -232,8 +231,8 @@ export default function Home() {
                         {suggestion.userName !== userContextName && (
                             <div className={`flex items-center ${suggestion.userName !== userContextName ? 'justify-start' : 'justify-end'} mb-4`}>
                                 <button
-                                        className="text-sm text-white bg-blue-800 hover:bg-blue-600 focus:ring-4 focus:ring-blue-300 dark:focus:ring-blue-800 rounded-lg px-4 py-2 font-medium transition duration-300"
-                                        onClick={(e) => handleKeepSuggestionMessage(index)}
+                                    className="text-sm text-white bg-blue-800 hover:bg-blue-600 focus:ring-4 focus:ring-blue-300 dark:focus:ring-blue-800 rounded-lg px-4 py-2 font-medium transition duration-300"
+                                    onClick={(e) => handleKeepSuggestionMessage(index)}
                                 >
                                     Choisir
                                 </button>

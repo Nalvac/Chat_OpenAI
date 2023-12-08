@@ -13,7 +13,7 @@ const MessageCheckedIcon = ({ message }: { message: MessageInterface }) => {
 
     console.log('MessageCheckedIcon - État interne:', isChecked, message.messageChecked);
     return (
-        <div>
+        <>
             { isChecked ? (
                 <div className="flex items-center justify-center h-full">
                     <div className="ml-5 w-6 h-6 bg-green-500 rounded-full flex items-center justify-center">
@@ -31,7 +31,7 @@ const MessageCheckedIcon = ({ message }: { message: MessageInterface }) => {
                     </div>
                 </div>
             ) : null}
-        </div>
+        </>
     );
 };
 
