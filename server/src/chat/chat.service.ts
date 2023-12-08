@@ -25,13 +25,13 @@ export class ChatService {
         try {
             const data = await this.openai.chat.completions.create({
                 messages: [
-                    { role: 'user', content: `Est-ce que l'information suivante est correcte : ${information}?` },
+                    { role: 'user', content: `Est-ce que l'information suivante est correcte : '${information}' ? repond par vrai ou faux` },
                 ],
                 model: 'gpt-3.5-turbo',
             });
 
             const response = data.choices[0].message.content.toLowerCase();
-            return response.includes('oui') || response.includes('correct');
+            return response.includes('vrai') || response.includes('correct');
         } catch (error) {
             console.error(error);
         }

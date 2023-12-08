@@ -1,15 +1,22 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, {useEffect, useState} from 'react';
 import { MessageInterface } from 'interface/messageInterface';
 
 interface Props {
     messages: Array<MessageInterface>;
     userContextName: string;
     handleTranslateMessage: (index: number, selectedLanguage: string) => void;
+    handleMessageVerification: (index: number) => boolean;
 }
 
-const MessagesDisplay = ({ messages, userContextName, handleTranslateMessage }: Props) => {
+const MessagesDisplay = ({ messages, userContextName, handleTranslateMessage, handleMessageVerification }: Props) => {
+
+
+    useEffect(() => {
+
+    }, [handleMessageVerification,userContextName ]);
+
 
     const [selectedLanguage, setSelectedLanguage] = useState("");
     return (
@@ -24,10 +31,15 @@ const MessagesDisplay = ({ messages, userContextName, handleTranslateMessage }: 
                             <p className={`text-sm font-medium text-white `}>{message.content}</p>
                             <span className={`text-sm text-gray-300 mb-2 `}>{message.sendAt}</span>
                         </div>
+                        { message.messageChecked ? (
+                            <div>
+                                {message.messageChecked}
+                            </div>
+                        ) : null}
                     </div>
                     {message.userName !== userContextName && (
                         <div className={`flex items-center ${message.userName !== userContextName ? 'justify-start' : 'justify-end'} mb-4`}>
-                        <select
+                            <select
                                 value={selectedLanguage}
                                 onChange={(e) => {
                                     handleTranslateMessage(index, e.target.value);
@@ -40,6 +52,8 @@ const MessagesDisplay = ({ messages, userContextName, handleTranslateMessage }: 
                                 <option value="fr">French</option>
                                 <option value="es">Spanish</option>
                             </select>
+
+                            <button className={'text-sm text-gray-700'} onClick={(e) => handleMessageVerification(index)}>Verifier</button>
                         </div>
                     )}
                 </div>

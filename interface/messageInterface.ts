@@ -3,4 +3,5 @@ export interface MessageInterface {
     role: 'user' | 'bot';
     sendAt: string;
     userName: string;
+    messageChecked: string;
 }

@@ -11,6 +11,7 @@ import MessagesDisplay from "@/component/messagesDisplay";
 export default function Home() {
     const socket = io('http://localhost:4000');
     const [messages, setMessages] = useState<MessageInterface[]>([]);
+    const [selectedLanguage, setSelectedLanguage] = useState("");
     const [inputMessage, setInputMessage] = useState("");
     const [clientId, setClientId] = useState<string>('');
     const { userContextName } = useUser();
@@ -47,7 +48,7 @@ export default function Home() {
 
     const handleSendMessage = () => {
         if (inputMessage !== '' && clientId) {
-            socket.emit('message', { content: inputMessage, role: 'user', sendAt: (new Date()).toLocaleDateString(), userName: userContextName} as MessageInterface);
+            socket.emit('message', { content: inputMessage, role: 'user', sendAt: (new Date()).toLocaleDateString(), userName: userContextName, messageChecked: ''} as MessageInterface);
         }
         setInputMessage("");
     };
@@ -64,9 +65,78 @@ export default function Home() {
         });
     };
 
+    const handleMessageVerification = (messageId: number) =>  {
+        socket.emit('check', messageId);
+
+        socket.once('messageChecked', (messageChecked: string) => {
+            const currentMessages = [...messages];
+            currentMessages[messageId].messageChecked = messageChecked;
+            setMessages(currentMessages);
+            console.log(currentMessages);
+        });
+    }
+
     return (
         <div className="flex flex-col h-screen bg-gray-100 dark:bg-gray-800">
-            <MessagesDisplay messages={messages} userContextName={userContextName} handleTranslateMessage={handleTranslateMessage}></MessagesDisplay>
+
+            <div className="flex-1 p-4 overflow-y-auto bg-white">
+                {messages.map((message, index) => (
+                    <div key={index}>
+                        <small className={`text-gray-600 flex  ${message.userName !== userContextName ? 'justify-start' : 'justify-end'}`}>
+                            {message.userName}
+                        </small>
+                        <div className={`flex items-center ${message.userName !== userContextName ? 'justify-start' : 'justify-end'}`}>
+                            <div className={`flex-col items-center mb-2 ${message.userName !== userContextName ? 'bg-green-600' : 'bg-blue-400'}  p-2 rounded-lg`}>
+                                <p className={`text-sm font-medium text-white `}>{message.content}</p>
+                                <span className={`text-sm text-gray-300 mb-2 `}>{message.sendAt}</span>
+                            </div>
+                            { message.messageChecked === 'Vrai' ? (
+                                <div className="flex items-center justify-center h-full">
+                                    <div className="ml-5 w-6 h-6 bg-green-500 rounded-full flex items-center justify-center">
+                                        <svg className="w-4 h-4 text-white" xmlns="http://www.w3.org/2000/svg"
+                                             fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                            <path
+                                                  d="M5 13l4 4L19 7"></path>
+                                        </svg>
+                                    </div>
+                                </div>
+                            ) : message.messageChecked === 'Faux' ? (
+                                <div className="flex items-center justify-center h-full">
+                                    <div className="ml-5 w-6 h-6 bg-red-500 rounded-full flex items-center justify-center">
+                                        <svg className="w-4 h-4 text-white" xmlns="http://www.w3.org/2000/svg"
+                                             fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                            <path
+                                                  d="M6 18L18 6M6 6l12 12"></path>
+                                        </svg>
+                                    </div>
+
+                                    <a href='#' className={'ml-5 text-sm text-gray-700'}> Voir une sugestion de OpenAI</a>
+                                </div>
+                            ): null}
+                        </div>
+                        {message.userName !== userContextName && (
+                            <div className={`flex items-center ${message.userName !== userContextName ? 'justify-start' : 'justify-end'} mb-4`}>
+                                <select
+                                    value={selectedLanguage}
+                                    onChange={(e) => {
+                                        handleTranslateMessage(index, e.target.value);
+                                        setSelectedLanguage(e.target.value);
+                                    }}
+                                    className="px-4 py-2 text-sm text-gray-700 bg-white border border-gray-300 rounded-lg focus:outline-none dark:bg-gray-700 dark:text-gray-300 dark:border-gray-600 mr-5"
+                                >
+                                    <option value="Ne traduit pas" disabled>Traduction</option>
+                                    <option value="en">English</option>
+                                    <option value="fr">French</option>
+                                    <option value="es">Spanish</option>
+                                </select>
+
+                                <button className={'text-sm text-gray-700'} onClick={(e) => handleMessageVerification(index)}>Verifier</button>
+                            </div>
+                        )}
+                    </div>
+                ))}
+            </div>
+
             <div className="flex items-center p-4 border-t border-gray-200 dark:border-gray-700">
                 <input
                     type="text"

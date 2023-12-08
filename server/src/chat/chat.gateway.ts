@@ -49,6 +49,19 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
     );
   }
 
+  @SubscribeMessage('check')
+  handleCheckMessage(client: Socket, messageId: number) {
+    this.chatSrv.validateInformation(this.messages[messageId].content).then(
+        (response) => {
+          console.log(response);
+          client.emit('messageChecked', response ? 'Vrai' : 'Faux');
+        },
+        (error) => {
+          console.log(error);
+        }
+    )
+  }
+
 
 
 }
