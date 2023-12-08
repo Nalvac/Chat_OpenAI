@@ -11,10 +11,12 @@ import MessagesDisplay from "@/component/messagesDisplay";
 export default function Home() {
     const socket = io('http://localhost:4000');
     const [messages, setMessages] = useState<MessageInterface[]>([]);
+    const [botSuggestion, setBotSuggestion] = useState<MessageInterface[]>([]);
     const [selectedLanguage, setSelectedLanguage] = useState("");
     const [selectedLanguageForAll, setSelectedLanguageForAll] = useState("");
     const [inputMessage, setInputMessage] = useState("");
     const [clientId, setClientId] = useState<string>('');
+    const [suggestionRequested, setSuggestionRequested] = useState(false);
     const { userContextName } = useUser();
     const router = useRouter();
 
@@ -69,9 +71,17 @@ export default function Home() {
             const currentMessages = [...messages];
             const [response, translatedMessageId] = data;
             currentMessages[translatedMessageId].content = response;
-
             setMessages(currentMessages);
         });
+    };
+
+    const handleRequestSuggestion = () => {
+        socket.emit('suggestion');
+
+        socket.once('suggestion', (data: Array<MessageInterface>) => {
+            setBotSuggestion(data);
+        })
+        setSuggestionRequested(true);
     };
 
     const handleMessageVerification = (messageId: number) =>  {
@@ -82,6 +92,18 @@ export default function Home() {
             currentMessages[messageId].messageChecked = messageChecked;
             setMessages(currentMessages);
         });
+    }
+    const handleKeepSuggestionMessage = (messageId: number) =>  {
+        socket.emit('message', {
+            content: botSuggestion[messageId].content,
+            role: botSuggestion[messageId].role,
+            sendAt: botSuggestion[messageId].sendAt,
+            userName: botSuggestion[messageId].userName,
+            messageChecked: ''
+        } as MessageInterface);
+
+        setSuggestionRequested(false);
+        setBotSuggestion([]);
     }
 
     return (
@@ -104,7 +126,8 @@ export default function Home() {
                 </select>
 
                 <button
-                        className="text-sm text-white bg-green-500 hover:bg-green-600 focus:ring-4 focus:ring-green-300 dark:focus:ring-green-800 rounded-lg px-4 py-2 font-medium ml-4 transition duration-300"
+                    onClick={handleRequestSuggestion}
+                    className="text-sm text-white bg-green-500 hover:bg-green-600 focus:ring-4 focus:ring-green-300 dark:focus:ring-green-800 rounded-lg px-4 py-2 font-medium ml-4 transition duration-300"
                 >
                     Demander une suggestion
                 </button>
@@ -169,6 +192,57 @@ export default function Home() {
                         )}
                     </div>
                 ))}
+                { suggestionRequested && (
+                    <div className="message-container">
+                        <p className={'flex justify-center text-black text-lg mt-5'}>Parmi ces réponses choisissez celle qui vous convient.</p>
+                    </div>
+                )}
+                { suggestionRequested && botSuggestion?.map((suggestion, index) => (
+                    <div key={index}>
+                        <small className={`text-gray-600 flex  ${suggestion.userName !== userContextName ? 'justify-start' : 'justify-end'}`}>
+                            {suggestion.userName}
+                        </small>
+                        <div className={`flex items-center ${suggestion.userName !== userContextName ? 'justify-start' : 'justify-end'}`}>
+                            <div className={`flex-col items-center mb-2 ${suggestion.userName !== userContextName ? 'bg-green-800' : 'bg-blue-800'}  p-2 rounded-lg`}>
+                                <p className={`text-sm font-medium text-white `}>{suggestion.content}</p>
+                                <span className={`text-sm text-gray-300 mb-2 `}>{suggestion.sendAt}</span>
+                            </div>
+                            { suggestion.messageChecked === 'Vrai' ? (
+                                <div key={index} className="flex items-center justify-center h-full">
+                                    <div className="ml-5 w-6 h-6 bg-green-500 rounded-full flex items-center justify-center">
+                                        <svg className="w-4 h-4 text-white" xmlns="http://www.w3.org/2000/svg"
+                                             fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                            <path
+                                                    d="M5 13l4 4L19 7"></path>
+                                        </svg>
+                                    </div>
+                                </div>
+                            ) : suggestion.messageChecked === 'Faux' ? (
+                                <div className="flex items-center justify-center h-full">
+                                    <div className="ml-5 w-6 h-6 bg-red-500 rounded-full flex items-center justify-center">
+                                        <svg className="w-4 h-4 text-white" xmlns="http://www.w3.org/2000/svg"
+                                             fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                            <path
+                                                    d="M6 18L18 6M6 6l12 12"></path>
+                                        </svg>
+                                    </div>
+                                </div>
+                        ): null}
+                        </div>
+                        {suggestion.userName !== userContextName && (
+                            <div className={`flex items-center ${suggestion.userName !== userContextName ? 'justify-start' : 'justify-end'} mb-4`}>
+                                <button
+                                        className="text-sm text-white bg-blue-800 hover:bg-blue-600 focus:ring-4 focus:ring-blue-300 dark:focus:ring-blue-800 rounded-lg px-4 py-2 font-medium transition duration-300"
+                                        onClick={(e) => handleKeepSuggestionMessage(index)}
+                                >
+                                    Choisir
+                                </button>
+                            </div>
+                        )}
+                    </div>
+                )) }
+
+
             </div>
 
             <div className="flex items-center p-4 border-t border-gray-200 dark:border-gray-700">

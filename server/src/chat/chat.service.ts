@@ -1,6 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import OpenAI from "openai";
-
+import { MessageInterface } from "interface/messageInterface";
+import {ChatCompletionMessageParam} from "openai/resources";
 @Injectable()
 export class ChatService {
 
@@ -31,29 +32,35 @@ export class ChatService {
             });
 
             const response = data.choices[0].message.content.toLowerCase();
+            console.log(response);
             return response.includes('vrai') || response.includes('correct');
         } catch (error) {
             console.error(error);
         }
     }
 
-    async generateSuggestions(context: string, numSuggestions: number = 3): Promise<string[]> {
+    async generateSuggestions(messages: MessageInterface[], numSuggestions: number = 3): Promise<MessageInterface[]> {
         try {
+            const context = [
+                { role: 'system', content: 'You are a helpful assistant.' },
+                    ...messages.map(({role, content}) => ({role: 'user', content}))
+            ] as ChatCompletionMessageParam[];
+
             const data = await this.openai.chat.completions.create({
-                messages: [{ role: 'system', content: 'You are a helpful assistant.' }, { role: 'user', content: context }],
-                max_tokens: 50, // Ajustez en fonction de la longueur de la suggestion que vous souhaitez
-                n: numSuggestions, // Nombre de suggestions à générer
-                stop: ['\n'], // Arrêter la génération de texte à la première nouvelle ligne
-                temperature: 0.5, // Contrôle de la créativité du modèle (ajustez au besoin)
+                messages: context,
+                max_tokens: 50,
+                n: numSuggestions,
+                stop: ['\n'],
+                temperature: 0.5,
                 model: 'gpt-3.5-turbo',
             });
 
-            // Extraire les suggestions générées par OpenAI
-            const suggestions: string[] = data.choices.map((choice) => choice.message.content);
+            const suggestions: MessageInterface[] = data.choices.map((choice) =>
+                    ({role: 'bot', content: choice.message.content, userName: 'Gpt', sendAt: (new Date()).toLocaleDateString(), messageChecked: ''} as MessageInterface));
             return suggestions;
         } catch (error) {
             console.error(error);
-            return []; // En cas d'erreur, retourner une liste vide
+            return [];
         }
     }
 }

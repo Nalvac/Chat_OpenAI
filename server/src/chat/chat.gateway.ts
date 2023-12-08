@@ -8,6 +8,7 @@ import {
 import { Socket, Server } from 'socket.io';
 import { ChatService } from "./chat.service";
 import { MessageInterface } from "interface/messageInterface";
+import {response} from "express";
 
 @WebSocketGateway({
 	cors: true,
@@ -69,14 +70,12 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
 		const [messageId, language] = data;
 		console.log(language);
 		this.chatSrv.makeTranslate(this.messages[messageId].content, language).then(
-				(response) => {
-					const translateMessage = [response, messageId];
-					client.emit('messageTranslated', translateMessage);
-				}
+			(response) => {
+				const translateMessage = [response, messageId];
+				client.emit('messageTranslated', translateMessage);
+			}
 		);
 	}
-
-
 
 	@SubscribeMessage('check')
 	handleCheckMessage(client: Socket, messageId: number) {
@@ -86,6 +85,15 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
 			},
 			(error) => {
 				console.log(error);
+			}
+		)
+	}
+
+	@SubscribeMessage('suggestion')
+	handleOpenAISuggestion(client: Socket) {
+		this.chatSrv.generateSuggestions(this.messages).then(
+			(response) => {
+				client.emit('suggestion', response)
 			}
 		)
 	}
