@@ -8,6 +8,7 @@ export class ChatService {
     constructor(private readonly openai: OpenAI) {
     }
 
+    // Service pour la traduction des messages de la discussion
     async makeTranslate(text: string, language: string): Promise<string> {
         let data;
         try {
@@ -22,6 +23,7 @@ export class ChatService {
         }
     }
 
+    // Service de validation d'une information (Si l'affirmation passé en paramètre est vrai ou fausse)
     async validateInformation(information: string): Promise<boolean> {
         try {
             const data = await this.openai.chat.completions.create({
@@ -39,6 +41,7 @@ export class ChatService {
         }
     }
 
+    // Service de generations des suggestions (avec 3 suggestions)
     async generateSuggestions(messages: MessageInterface[], numSuggestions: number = 3): Promise<MessageInterface[]> {
         try {
             const context = [
@@ -56,7 +59,7 @@ export class ChatService {
             });
 
             const suggestions: MessageInterface[] = data.choices.map((choice) =>
-                    ({role: 'bot', content: choice.message.content, userName: 'Gpt', sendAt: (new Date()).toLocaleDateString(), messageChecked: ''} as MessageInterface));
+                ({role: 'bot', content: choice.message.content, userName: 'Gpt', sendAt: (new Date()).toLocaleDateString(), messageChecked: ''} as MessageInterface));
             return suggestions;
         } catch (error) {
             console.error(error);

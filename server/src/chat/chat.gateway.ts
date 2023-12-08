@@ -30,15 +30,18 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
 		this.sendMessagesToClient(client);
 	}
 
+	sendMessagesToClient(client: Socket) {
+		client.emit('message', this.messages);
+	}
+
+	// Ecoute sur le socket.emit('message') la liste des messages
 	@SubscribeMessage('message')
 	handleMessage(client: Socket, message: MessageInterface): void {
 		this.messages = [...this.messages, message];
 		this.server.emit('message', this.messages);
 	}
 
-	sendMessagesToClient(client: Socket) {
-		client.emit('message', this.messages);
-	}
+	// Ecoute sur le socket.emit('translateAllReceivedMessage') pour faire la traduction de tous le messages
 	@SubscribeMessage('translateAllReceivedMessage')
 	async handleTranslateMessages(client: Socket, data: any): Promise<void> {
 		const [language, userContextName] = data;
@@ -46,6 +49,7 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
 		try {
 			const translatedMessages = await Promise.all(
 				this.messages.map(async (message) => {
+					// Traduction des messages reçus et dont la langue de traduction n'est pas vide
 					if (message.userName !== userContextName && language !== "") {
 						const response = await this.chatSrv.makeTranslate(message.content, language);
 						if (response !== undefined) {
@@ -65,6 +69,7 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
 		}
 	}
 
+	// Ecoute sur le socket.emit('translate') pour faire la traduction de tous le messages
 	@SubscribeMessage('translate')
 	handleTranslateMessage(client: Socket, data): void {
 		const [messageId, language] = data;
@@ -77,6 +82,7 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
 		);
 	}
 
+	// Ecoute sur le socket.emit('check') pour la validation d'une affirmation
 	@SubscribeMessage('check')
 	handleCheckMessage(client: Socket, messageId: number) {
 		this.chatSrv.validateInformation(this.messages[messageId].content).then(
@@ -89,6 +95,7 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
 		)
 	}
 
+	// Ecoute sur le socket.emit('suggestion') demande de suggestion a openAI en fonction de ce qui ce dit dans le message
 	@SubscribeMessage('suggestion')
 	handleOpenAISuggestion(client: Socket) {
 		this.chatSrv.generateSuggestions(this.messages).then(

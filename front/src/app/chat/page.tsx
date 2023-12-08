@@ -132,7 +132,6 @@ export default function Chat() {
                 </button>
             </div>
 
-
             <div className="flex-1 p-4 overflow-y-auto bg-white">
                 {messages?.map((message, index) => (
                     <div key={index}>
@@ -169,11 +168,11 @@ export default function Chat() {
                         {message.userName !== userContextName && (
                             <div className={`flex items-center ${message.userName !== userContextName ? 'justify-start' : 'justify-end'} mb-4`}>
                                 <select
-                                        onChange={(e) => {
-                                            handleTranslateMessage(index, e.target.value);
-                                            setSelectedLanguage(e.target.value);
-                                        }}
-                                        className="px-4 py-2 text-sm text-gray-700 bg-white border border-gray-300 rounded-lg focus:outline-none dark:bg-gray-700 dark:text-gray-300 dark:border-gray-600 mr-5"
+                                    onChange={(e) => {
+                                        handleTranslateMessage(index, e.target.value);
+                                        setSelectedLanguage(e.target.value);
+                                    }}
+                                    className="px-4 py-2 text-sm text-gray-700 bg-white border border-gray-300 rounded-lg focus:outline-none dark:bg-gray-700 dark:text-gray-300 dark:border-gray-600 mr-5"
                                 >
                                     <option value="" >Traduction</option>
                                     <option value="en">English</option>
